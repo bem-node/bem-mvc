@@ -368,15 +368,26 @@ BEM.TEST.decl('i-model', function() {
                 .un('change', disabledHandler);
 
 
-            BEM.MODEL.trigger('model-for-trigger', 'f1', 'change');
+            runs(function () {
+                BEM.MODEL.trigger('model-for-trigger', 'f1', 'change');
+            });
 
-            expect(onModelChange).not.toHaveBeenCalled(); // событие на поле не всплывёт после .trigger только после set
+            waitsFor(function () {
+                if (onFieldChange.wasCalled) {
+                    expect(onModelChange).not.toHaveBeenCalled(); // событие на поле не всплывёт после .trigger только после set
+                    expect(disabledHandler).not.toHaveBeenCalled();
+                }
+                return onFieldChange.wasCalled;
+            }, 'onFieldChange to be called');
 
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(disabledHandler).not.toHaveBeenCalled();
+            runs(function () {
+                BEM.MODEL.getOne('model-for-trigger').set('f1', 2);
+                expect(onModelChange).not.toHaveBeenCalled(); // no sync call
+            });
 
-            BEM.MODEL.getOne('model-for-trigger').set('f1', 2);
-            expect(onModelChange).toHaveBeenCalled(); // событие на поле всплывёт после set
+            waitsFor(function () {
+                return onModelChange.wasCalled;
+            }, 'onModelChange to be called');
         });
 
 
@@ -393,16 +404,47 @@ BEM.TEST.decl('i-model', function() {
                 .on('change', disabledHandler)
                 .un('change', disabledHandler);
 
+            runs(function () {
+                BEM.MODEL.trigger(modelParams, 'f1', 'change');
+            });
 
-            BEM.MODEL.trigger(modelParams, 'f1', 'change');
+            waitsFor(function () {
+                if (onFieldChange.wasCalled) {
+                    expect(onModelChange).not.toHaveBeenCalled(); // событие на поле не всплывёт после .trigger только после set
+                    expect(disabledHandler).not.toHaveBeenCalled();
+                }
+                return onFieldChange.wasCalled;
+            }, 'onFieldChange to be called');
 
-            expect(onModelChange).not.toHaveBeenCalled(); // событие на поле не всплывёт после .trigger только после set
+            runs(function () {
+                BEM.MODEL.getOne(modelParams).set('f1', 2);
+            });
 
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(disabledHandler).not.toHaveBeenCalled();
+            waitsFor(function () {
+                return onModelChange.wasCalled;
+            }, 'onModelChange to be called');  // событие на поле всплывёт после set
 
+        });
+
+        it('should trigger model event debounced', function() {
+            var onModelChange = jasmine.createSpy('onModelChange'),
+                modelParams = { name: 'model-for-trigger', id: 1 };
+
+            BEM.MODEL
+                .create(modelParams, { f1: 1, f2: 'bla' })
+                .on('change', onModelChange);
             BEM.MODEL.getOne(modelParams).set('f1', 2);
-            expect(onModelChange).toHaveBeenCalled(); // событие на поле всплывёт после set
+            BEM.MODEL.getOne(modelParams).set('f2', 'bla bla');
+            expect(onModelChange).not.toHaveBeenCalled();
+
+            waitsFor(function () {
+                return onModelChange.wasCalled;
+            }, 'onModelChange was called');
+
+            runs(function () {
+                expect(onModelChange.calls.length).toBe(1);
+            });
+
         });
 
 

@@ -226,9 +226,12 @@ BEM.TEST.decl('i-model__field_type_array', function() {
                 .un('change', disabledHandler)
                 .set('f', 666);
 
-            expect(onChange).toHaveBeenCalled();
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(disabledHandler).not.toHaveBeenCalled();
+            waitsFor(function () {
+                if (onChange.wasCalled && onFieldChange.wasCalled) {
+                    expect(disabledHandler).not.toHaveBeenCalled();
+                }
+                return onChange.wasCalled && onFieldChange.wasCalled;
+            }, 'onChange was called && onFieldChange was called');
         });
 
         it('should destruct', function() {
@@ -368,8 +371,8 @@ BEM.TEST.decl('i-model__field_type_array', function() {
                 field = model.get('f');
 
             field[0] = '';
-            model.set('f', field);	
-        
+            model.set('f', field);
+
             expect(model.get('f')).toEqual(model.get('f', 'format'));
         });
 

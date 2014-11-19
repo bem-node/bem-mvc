@@ -12,7 +12,7 @@
      * @namespace
      * @name BEM.MODEL
      */
-    var MODEL = BEM.MODEL = $.inherit($.observable, {
+    var MODEL = BEM.MODEL = $.inherit($.observableAsync, {
 
         /**
          * Минимальное время между событиями на модели
@@ -79,15 +79,6 @@
             this.fieldsDecl = decl;
             this.fields = {};
 
-            this
-                .on('field-init', function(e, data) {
-                    if (!this.fieldsDecl[data.field].calculate)
-                        return _this._calcDependsTo(data.field, data);
-                })
-                .on('field-change', function(e, data) {
-                    return _this._onFieldChange(data.field, data);
-                });
-
             $.each(this.fieldsDecl, function(name, props) {
                 _this.fields[name] = MODEL.FIELD.create(name, props, _this);
             });
@@ -96,7 +87,7 @@
                 var fieldDecl = _this.fieldsDecl[name];
 
                 data && !fieldDecl.calculate &&
-                    field.initData(data[name] != undefined ? data[name] : fieldDecl.value);
+                    field.initData(data[name] !== undefined ? data[name] : fieldDecl.value);
             });
 
             this.trigger('init');
@@ -340,7 +331,7 @@
                 e = field;
                 field = undefined;
             }
-            
+
             !field ?
                 this.__base(e, data, fn, ctx) :
                 field.split(' ').forEach(function(name) {
@@ -399,18 +390,31 @@
         },
 
         /**
+         * @typedef {*} FieldEventData
+         * @property {String} field name
+         */
+
+        /**
+         * @param  {FieldEventData} data
+         */
+        _onFieldInit: function (data) {
+            if (!this.fieldsDecl[data.field].calculate) {
+                this._calcDependsTo(data.field, data);
+            }
+        },
+
+        /**
          * Тригерит (с декоратором $.throttle) событие change на модели при изменении полей
-         * @param {String} name имя поля
-         * @param {Object} opts доп. параметры
-         * @returns {BEM.MODEL}
+         * @param {FieldEventData} opts
          * @private
          */
-        _onFieldChange: function(name, opts) {
+        _onFieldChange: function(opts) {
+            var name = opts.field;
             if (this.changed.indexOf(name) == -1) this.changed.push(name);
-            this.fieldsDecl[name].calculate || this._calcDependsTo(name, opts);
+            if (!this.fieldsDecl[name].calculate) {
+                this._calcDependsTo(name, opts);
+            }
             this.fireChange(opts);
-
-            return this;
         },
 
         /**
