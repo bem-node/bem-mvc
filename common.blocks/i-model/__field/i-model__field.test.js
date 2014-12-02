@@ -235,9 +235,13 @@ BEM.TEST.decl('i-model__field', function() {
                 .un('change', disabledHandler)
                 .set('f', { val: 666 });
 
-            expect(onChange).toHaveBeenCalled();
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(disabledHandler).not.toHaveBeenCalled();
+            waitsFor(function () {
+                if (onChange.wasCalled && onFieldChange.wasCalled) {
+                    expect(disabledHandler).not.toHaveBeenCalled();
+                }
+                return onChange.wasCalled && onFieldChange.wasCalled;
+            }, 'onChange was called && onFieldChange was called');
+
         });
 
         it('should destruct', function() {
@@ -282,7 +286,7 @@ BEM.TEST.decl('i-model__field', function() {
                 simpleField.set(0).fixData().set(1);
                 expect(simpleField.isChanged()).toBe(true);
             });
-            
+
             it('should return false if field not changed', function() {
                 simpleField
                     .set(1)

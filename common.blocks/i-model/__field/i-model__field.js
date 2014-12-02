@@ -33,6 +33,12 @@
         _trigger: function(event, opts) {
             opts = $.extend({}, opts, { field: this.name });
 
+            if (event === 'init' && this.model._onFieldInit) {
+                this.model._onFieldInit(opts);
+            } else if (event === 'change' && this.model._onFieldChange) {
+                this.model._onFieldChange(opts);
+            }
+
             this.model.trigger('field-' + event, opts);
             this.trigger(event, opts);
 
@@ -124,8 +130,8 @@
             else
                 opts = { value: this._value };
 
-            this._trigger(opts && opts.isInit ? 'init' : 'change', opts);
-            
+            this._trigger(opts.isInit ? 'init' : 'change', opts);
+
             return this;
         },
 
@@ -178,7 +184,7 @@
          * @returns {boolean}
          */
         checkEmpty: function(value) {
-            return value == undefined || !!(value + '').match(/^\s*$/);
+            return value === undefined || !!(value + '').match(/^\s*$/);
         },
 
         /**

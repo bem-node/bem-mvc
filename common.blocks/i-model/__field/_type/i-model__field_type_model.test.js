@@ -41,13 +41,22 @@ BEM.TEST.decl('i-model__field_type_model', function() {
 
             model.set('f', { innerF: 'new str' });
 
-            expect(model.get('f').get('innerF')).toEqual('new str');
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(onModelChange).toHaveBeenCalled();
 
-            model.destruct();
-            expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
-            expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            expect(model.get('f').get('innerF')).toEqual('new str');
+
+            waitsFor(function () {
+                return onFieldChange.wasCalled;
+            }, 'onFieldChange was called');
+
+            waitsFor(function () {
+                return onModelChange.wasCalled;
+            }, 'onModelChange was called');
+
+            runs(function () {
+                model.destruct();
+                expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
+                expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            });
         });
 
         it('should set model as value', function() {
@@ -68,16 +77,30 @@ BEM.TEST.decl('i-model__field_type_model', function() {
             model.set('f', modelToSet);
 
             expect(model.get('f').get('innerF')).toEqual('inner2');
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(onModelChange).toHaveBeenCalled();
 
-            model.on('f', 'change', onInnerFieldChange);
-            modelToSet.set('innerF', 'bla');
-            expect(onInnerFieldChange).toHaveBeenCalled();
+            waitsFor(function () {
+               return onFieldChange.wasCalled;
+            }, 'onFieldChange was Called');
 
-            model.destruct();
-            expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
-            expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            waitsFor(function () {
+               return onModelChange.wasCalled;
+            }, 'onModelChange was Called');
+
+            runs(function () {
+                model.on('f', 'change', onInnerFieldChange);
+                modelToSet.set('innerF', 'bla');
+            });
+
+            waitsFor(function () {
+               return onInnerFieldChange.wasCalled;
+            }, 'onInnerFieldChange was Called');
+
+            runs(function () {
+                model.destruct();
+                expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
+                expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            });
+
         });
 
         it('should change inner value', function() {
@@ -96,12 +119,21 @@ BEM.TEST.decl('i-model__field_type_model', function() {
             model.get('f').set('innerF', 'new str');
 
             expect(model.get('f').get('innerF')).toEqual('new str');
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(onModelChange).toHaveBeenCalled();
 
-            model.destruct();
-            expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
-            expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            waitsFor(function () {
+               return onFieldChange.wasCalled;
+            }, 'onFieldChange was Called');
+
+            waitsFor(function () {
+               return onModelChange.wasCalled;
+            }, 'onModelChange was Called');
+
+            runs(function () {
+                model.destruct();
+                expect(BEM.MODEL.get('model-type-field').length).toEqual(0);
+                expect(BEM.MODEL.get('inner-model').length).toEqual(0);
+            });
+
         });
 
         it('isChanged() should return true if inner model was changed', function () {
@@ -221,32 +253,46 @@ BEM.TEST.decl('i-model__field_type_model', function() {
                         innerF: 'str'
                     }
                 }),
-
+                newInner,
+                model2,
                 onCustom = jasmine.createSpy('onCustom'),
                 onNewCustom = jasmine.createSpy('onNewCustom');
 
             model.on('f', 'custom-event', onCustom);
             model.get('f').trigger('custom-event');
 
-            var newInner = BEM.MODEL.create('inner-model', { innerF: 'str1' });
+            waitsFor(function () {
+                return onCustom.wasCalled;
+            }, 'onCustom was called');
 
-            model.on('f', 'new-custom-event', onNewCustom);
-            model.set('f', newInner);
-            newInner.trigger('new-custom-event');
+            runs(function () {
+                newInner = BEM.MODEL.create('inner-model', { innerF: 'str1' });
 
-            var model2 = BEM.MODEL.create('model-type-field', {
-                f: {
-                    innerF: 'str'
-                }
+                model.on('f', 'new-custom-event', onNewCustom);
+                model.set('f', newInner);
+                newInner.trigger('new-custom-event');
+
+                model2 = BEM.MODEL.create('model-type-field', {
+                    f: {
+                        innerF: 'str'
+                    }
+                });
+
+                model2.get('f').trigger('custom-event');
+
+
             });
 
-            model2.get('f').trigger('custom-event');
+            waitsFor(function () {
+                return onNewCustom.wasCalled;
+            }, 'onNewCustom was called');
 
-            model.destruct();
-            model2.destruct();
+            runs(function () {
+                model.destruct();
+                model2.destruct();
+                expect(onCustom.calls.length).toEqual(1);
+            });
 
-            expect(onCustom.calls.length).toEqual(1);
-            expect(onNewCustom).toHaveBeenCalled();
         });
 
     });

@@ -272,11 +272,22 @@ BEM.TEST.decl('i-model__field_type_model-list', function() {
             model.get('list').getByIndex(0).trigger('deact-custom-event');
             model.get('list').add({ id: 4, f: 'f4' }).trigger('deact-custom-event');
 
-            expect(onCustom.calls.length).toEqual(1);
-            expect(onNewCustom.calls.length).toEqual(1);
-            expect(onCustomDeactive).not.toHaveBeenCalled();
+            waitsFor(function () {
+                return onCustom.wasCalled;
+            }, 'onCustom was called');
 
-            model.destruct();
+            waitsFor(function () {
+                return onNewCustom.wasCalled;
+            }, 'onNewCustom was called');
+
+            runs(function () {
+                expect(onCustom.calls.length).toEqual(1);
+                expect(onNewCustom.calls.length).toEqual(1);
+                expect(onCustomDeactive).not.toHaveBeenCalled();
+
+                model.destruct();
+            });
+
         });
 
     });

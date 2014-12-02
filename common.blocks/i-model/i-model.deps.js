@@ -1,5 +1,6 @@
 ({
     mustDeps: [
+        {block: 'i-jquery', elems: ['inherit', 'observable-async']}
     ],
     shouldDeps: [
         {

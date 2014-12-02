@@ -209,9 +209,12 @@ BEM.TEST.decl('i-model__field_type_number', function() {
                 .un('change', disabledHandler)
                 .set('f', 666);
 
-            expect(onChange).toHaveBeenCalled();
-            expect(onFieldChange).toHaveBeenCalled();
-            expect(disabledHandler).not.toHaveBeenCalled();
+            waitsFor(function () {
+                if (onChange.wasCalled && onFieldChange.wasCalled) {
+                    expect(disabledHandler).not.toHaveBeenCalled();
+                }
+                return onChange.wasCalled && onFieldChange.wasCalled;
+            }, 'onChange was called && onFieldChange was called');
         });
 
         it('should destruct', function() {
